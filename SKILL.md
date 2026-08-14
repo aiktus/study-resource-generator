@@ -1,11 +1,11 @@
 ---
 name: study-resource-generator
-description: 把任意学习主题转换成结构化的中文学习资料包，风格与本项目里 Python-Study / Mysql / Redis / Study-AI 文件夹完全一致：包含「学习路线」「学习方式」「学习进度」「章节复习记录」四个核心文件，并按主题特点决定 Demo 介质。当用户想「学习某个技术/主题」「生成学习资料或学习路线」「按这些文件夹的格式整理某个主题」时使用。
+description: 把任意学习主题转换成结构化的中文学习资料包，生成「学习路线」「学习方式」「学习进度」「章节复习记录」四个核心文件，并按主题特点决定 Demo 介质；支持跨平台 Markdown 元数据与 Callout，以及可选的 Obsidian 双链、Dataview、闪卡和 MOC 增强。当用户想「学习某个技术/主题」「生成学习资料或学习路线」「建立 Markdown/Obsidian 学习知识库」「管理学习进度和复习记录」时使用。
 ---
 
 # 学习资料包生成器
 
-把用户想学的任意主题，整理成与本项目现有学习文件夹（Python-Study、Mysql、Redis、Study-AI）**完全一致的格式**：一个主题文件夹，内含学习路线、学习方式、进度记录、复习记录四个核心文件，后续按「学习方式」里的 5 步循环逐章产出理论文档和 Demo。
+把用户想学的任意主题，整理成参考本项目现有学习文件夹（Python-Study、Mysql、Redis、Study-AI）风格的学习资料包：一个主题文件夹，内含学习路线、学习方式、进度记录、复习记录四个核心文件，后续按「学习方式」里的 5 步循环逐章产出理论文档和 Demo。
 
 本 skill 的产出是**脚手架**（4 个核心文件）。逐章的理论 `.md` 和 Demo 是后续「开始学习」时按学习方式文档生成的，不在本 skill 一次性产出。
 
@@ -18,6 +18,7 @@ description: 把任意学习主题转换成结构化的中文学习资料包，�
 1. **学习主题**：例如「Go 语言基础」「Docker」「FastAPI」「计算机网络」。
 2. **学习者背景 / 目标**：零基础 / 有相关经验 / 为面试 / 为做项目。影响路线深浅和「适合谁」。
 3. **Demo 介质**：通常可由主题自动判断（见第 2 步），不确定时再问。
+4. **是否启用 Obsidian 专属增强**（双链 / Dataview / 闪卡，见下文「Obsidian 增强层」第二档）：默认关闭；用户提到 Obsidian、要建知识库或明确要求时开启，不确定时用 AskUserQuestion 确认。第一档（跨平台安全项）无需询问，所有主题默认开启。
 
 ### 第 2 步：判断 Demo 介质
 
@@ -63,9 +64,32 @@ description: 把任意学习主题转换成结构化的中文学习资料包，�
 4. 每章一个目录 `N.章节名称/`，知识点 `.md` 编号在前，`demo/` 文件夹含 `README.md` + 编号 Demo。
 5. 复习日期格式统一 `YYYY-MM-DD`，用当天日期。
 6. 文档语言为**中文**，术语保留英文原词。
+7. Callout 一律用**大写类型**（`> [!TIP]`、`> [!WARNING]`、`> [!IMPORTANT]`），保证 GitHub 兼容；学习路线列表内的 `⚠️ 踩坑 / ⚠️ 面试高频` 保持行内符号，理论文档中的独立提示段落升级为 Callout。
+8. 理论知识点 `.md` 头部必带 frontmatter（`status` / `stage` / `importance` / `review`），字段与取值见 `references/tracking-templates.md`。
+
+## Obsidian 增强层
+
+生成脚手架时分两档处理：
+
+**第一档（默认开启，跨平台安全）**——GitHub / Typora / VSCode 均正常渲染或无害降级：
+
+1. 理论知识点 `.md` 统一带 frontmatter 属性（铁律 8）。
+2. 提示块用大写 Callout：`> [!TIP]`（点题/技巧）、`> [!WARNING]`（踩坑/危险操作）、`> [!IMPORTANT]`（面试高频/必掌握）、`> [!NOTE]`（补充说明）。
+3. 图示可用 Mermaid 代码块（Obsidian / GitHub 原生渲染），如阶段依赖图、概念关系图。
+4. 待办用 `- [ ]` 任务列表；可加嵌套标签（如 `#<主题>/第N章`、`#面试高频`），非 Obsidian 环境下只是纯文本，无害。
+
+**第二档（默认关闭，需用户确认启用）**——仅在 Obsidian 中生效，其他工具会显示原始语法：
+
+1. 双链 `[[ ]]`：学习路线知识点 → 理论 .md、理论文档跨章引用、demo README 映射表改用链接。
+2. `3.学习进度.md` 顶部加 Dataview 自动汇总查询（手工记录段保留作兜底，不删）。
+3. `本章节面试常考内容.md` 用 Spaced Repetition 插件闪卡格式：`问题::答案`（单行）或多行卡片 Callout。
+4. 可选生成 `0.<主题>MOC.md` 总览页，用 `![[ ]]` 嵌入学习路线与时间线，作为该主题在 Obsidian 里的入口。
+
+启用第二档时，先读取 `references/obsidian-template.md`，再按其中说明把 Obsidian 专属约定注入学习方式文档（作为第六节之后的独立小节），并在「关键约定」表中加一行说明。默认关闭时不要读取或复制该文件内容。
 
 ## 参考模板
 
 - `references/roadmap-template.md` — 学习路线（`1.xxx`）的完整格式与示例
 - `references/method-template.md` — 学习方式（`2.xxx`）的完整格式、README 规范、各介质特别约定
 - `references/tracking-templates.md` — 学习进度（`3`）与章节复习记录（`4`）的骨架格式
+- `references/obsidian-template.md` — 仅启用 Obsidian 第二档时读取的注入片段
